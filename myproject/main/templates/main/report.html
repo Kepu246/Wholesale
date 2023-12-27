@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        #button-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 250px;
+            margin: 20px auto;
+        }
+
+        #warehouse-button,
+        #print-button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #print-button {
+            background-color: #008CBA;
+        }
+
+        h3 {
+            margin-top: 20px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        @media screen {
+            #warehouse-button {
+                display: block;
+            }
+        }
+
+        @media print {
+            #warehouse-button, #print-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Inventory Report</h2>
+
+    <div id="button-container">
+        <form method="get" action="{% url 'List_inventory' %}">
+            <button id="warehouse-button" type="submit">Warehouse</button>
+            {% csrf_token %}
+        </form>
+
+        <button id="print-button" onclick="window.print()">Print Report</button>
+    </div>
+
+    <h3>All Items:</h3>
+    <ul>
+        {% for item in all_items %}
+            <li>{{ item.name }} - {{ item.quantity }} - {{ item.cost }} - {{ item.subtotal }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Total Sum:</h3>
+    <p>{{ total_sum }}</p>
+</body>
+</html>

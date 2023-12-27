@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Tax Invoice for Expense Invoice ID: {{ expense_invoice.expense_invoice_id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        button[type="printAndHomeButton"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button[type="printAndHomeButton"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h2>Create Tax Invoice</h2>
+    <form method="post" action="{% url 'create_tax_invoice' expense_invoice_id=expense_invoice.expense_invoice_id %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="printAndHomeButton">Create Tax Invoice</button>
+    </form>
+
+    <script>
+        document.getElementById('printAndHomeButton').addEventListener('click', function() {
+            window.print();
+            window.location.href = "{% url 'list_Order' %}";
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Order</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+        }
+
+        #subtotal-container {
+            margin-bottom: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        button, a button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 8px;
+        }
+
+        button:hover, a button:hover {
+            background-color: #45a049;
+        }
+
+        #shortageMessage {
+            color: red;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Create Order</h2>
+    <form method="post" action="{% url 'create_order' %}" id="order-form">
+        {% csrf_token %}
+        <div>
+            <label for="id_name_client">Name Client:</label>
+            {{ form.name_client }}
+        </div>
+        <div>
+            <label for="id_quantity">Quantity:</label>
+            {{ form.quantity }}
+        </div>
+        <div>
+            <label for="id_product">Product:</label>
+            <select id="id_product" name="product">
+                {% for inventory_instance in form.product.field.queryset %}
+                    <option value="{{ inventory_instance.pk }}" data-cost="{{ inventory_instance.cost }}">
+                        {{ inventory_instance.name }} - Quantity: {{ inventory_instance.quantity }} - Cost: {{ inventory_instance.cost }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div id="subtotal-container">SubTotal: $0.00</div>
+        <input type="hidden" name="subtotal" id="id_subtotal" value="0.00">
+        <button type="submit" id="submit-button">Create Order</button>
+        <a href="{% url 'list_Order' %}"><button type="button">Cancel</button></a>
+    </form>
+
+    <script>
+        $(document).ready(function() {
+            const updateSubtotal = function () {
+                const quantity = parseInt($("#id_quantity").val()) || 0;
+                const cost = parseFloat($("#id_product option:selected").data("cost")) || 0;
+                const subtotal = quantity * cost || 0;
+
+                $("#subtotal-container").text("SubTotal: $" + subtotal.toFixed(2));
+                $("#id_subtotal").val(subtotal.toFixed(2));
+            };
+
+            $("#id_quantity, #id_product").on("input change", updateSubtotal);
+            updateSubtotal();
+
+            $("#id_product, #id_quantity").on("change keyup", updateShortage);
+
+            function updateShortage() {
+                const productId = $("#id_product").val();
+                const quantity = $("#id_quantity").val();
+
+                $.ajax({
+                    type: "GET",
+                    url: "{% url 'check_shortage' %}",
+                    data: {
+                        product_id: productId,
+                        quantity: quantity
+                    },
+                    success: function(response) {
+                        $("#shortageMessage").text("Shortage: " + response.shortage);
+                        if (response.shortage !== undefined && parseInt(response.shortage) >= 1) {
+                            $("#submit-button").prop("disabled", true);
+                            $("#submit-button").css({"background-color": "#ccc", "color": "#666"});
+                        } else {
+                            $("#submit-button").prop("disabled", false);
+                            $("#submit-button").css({"background-color": "#4CAF50", "color": "white"});
+                        }
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            }
+        });
+    </script>
+    <p id="shortageMessage">Shortage: 0</p>
+</body>
+</html>

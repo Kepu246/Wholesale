@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Outgoing Invoice</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        form {
+            margin-bottom: 10px;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .add-order-button, .warehouse-button {
+            background-color: #4CAF50;
+            color: #fff;
+        }
+
+        .print-button
+        {
+            background-color: #008CBA;
+            color: #fff;
+        }
+       .delete-button {
+            background-color: #FF0000;
+            color: #fff;
+        }
+       .search-form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .search-form label {
+            margin-right: 10px;
+            font-weight: bold;
+            margin-top: 10px;
+            vertical-align: middle;
+            display: inline-block;
+        }
+
+        .search-form input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .search-form .search-button {
+            background-color: #008CBA;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+
+        .reset-form {
+            display: flex;
+        }
+
+        .reset-form .reset-button {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<h1>Outgoing Invoice</h1>
+
+<form method="get" action="{% url 'create_order' %}">
+    <button class="add-order-button" type="submit">Add an order</button>
+    {% csrf_token %}
+</form>
+
+<form method="get" action="{% url 'List_inventory' %}">
+    <button class="warehouse-button" type="submit">Warehouse</button>
+    {% csrf_token %}
+</form>
+
+<form class="reset-form" method="get" action="{% url 'list_Order' %}">
+    <button class="reset-button" type="submit">Reset search</button>
+    {% csrf_token %}
+</form>
+<form class="search-form" method="get" action="{% url 'search_orders' %}">
+    <label for="search_id">Search For ID:</label>
+    <input type="text" id="search_id" name="search_id" placeholder="Enter ID">
+    <button class="search-button" type="submit">Search</button>
+    {% csrf_token %}
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Name Client</th>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Subtotal</th>
+            <th>Confirmed Date</th>
+            <th>Payment Method</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        {% for order in orders_invoices %}
+            <tr>
+                <td>{{ order.order_id }}</td>
+                <td>{{ order.order_date }}</td>
+                <td>{{ order.name_client }}</td>
+                <td>{{ order.product.name }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.unit_price }}</td>
+                <td>{{ order.subtotal }}</td>
+                {% for invoice in order.invoices.all %}
+                    <td>{{ invoice.confirmed_date }}</td>
+                    <td>{{ invoice.payment_method }}</td>
+                {% endfor %}
+                <td>
+                    <form method="get" action="{% url 'print_document' order_id=order.order_id %}" target="_blank">
+                        <button class="print-button" type="submit">Print</button>
+                        {% csrf_token %}
+                    </form>
+                    <form method="post" action="{% url 'delete_order' order_id=order.order_id %}">
+                        {% csrf_token %}
+                        <button class="delete-button" type="submit">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    function searchOrders() {
+        const searchId = $('#search_id').val();
+
+        $.ajax({
+            type: 'GET',
+            url: '{% url "search_orders" %}',
+            data: { 'search_id': searchId },
+            success: function(data) {
+                $('#orderTable').html(data.html);
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+    }
+
+</script>
+</body>
+</html>

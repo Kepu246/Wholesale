@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Incoming Invoice</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        form {
+            margin-bottom: 10px;
+        }
+
+        #add-inventory-form {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        label {
+            margin-bottom: 5px;
+        }
+
+        input, button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+
+        form input, form button {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+
+        .add-Inventory {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        .add-Inventory:hover, .reset-button, .generate-report-button, .order-list-button {
+            background-color: #4CAF50;
+            color: #fff;
+        }
+
+        .delete-button {
+            background-color: #FF0000;
+            color: #fff;
+        }
+        #search-button {
+            background-color: #008CBA;
+            color: white;
+            cursor: pointer;
+        }
+
+        #search-button:hover {
+            background-color: #008CBA;
+        }
+        .action-buttons-container
+        {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+    </style>
+</head>
+<body>
+
+<h1>Incoming Invoice</h1>
+<form method="post" action="{% url 'report' %}">
+    <div class="action-buttons-container">
+        <button class="generate-report-button" type="submit">Generate Report</button>
+        <button class="order-list-button" type="button" onclick="location.href='{% url 'list_Order' %}'">Order list</button>
+    </div>
+    {% csrf_token %}
+</form>
+<form class="reset-form" method="get" action="{% url 'List_inventory' %}">
+    <button class="reset-button" type="submit">Reset search</button>
+    {% csrf_token %}
+</form>
+<form id="search-form">
+    <label for="search-name">Search for name:</label>
+    <input type="text" id="search-name" name="search-name" placeholder="Name">
+    <button type="button" id="search-button">Search</button>
+</form>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name Product</th>
+            <th>Quantity</th>
+            <th>Cost</th>
+            <th>Subtotal</th>
+            <th>Entry date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        {% for inventory in inventory %}
+        <tr>
+            <td>{{ inventory.inventory_id }}</td>
+            <td>{{ inventory.name }}</td>
+            <td>{{ inventory.quantity }}</td>
+            <td>{{ inventory.cost }}</td>
+            <td>{{ inventory.subtotal }}</td>
+            <td>{{ inventory.entry_date }}</td>
+            <td>
+                <form method="post" class="delete-form" data-id="{{ inventory.inventory_id }}">
+                    {% csrf_token %}
+                    <button class="delete-button" type="button">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2>Inventory Operations</h2>
+<form method="post" id="add-inventory-form">
+    {% csrf_token %}
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+    <label for="quantity">Quantity:</label>
+    <input type="number" id="quantity" name="quantity" required>
+    <label for="cost">Cost:</label>
+    <input type="number" id="cost" name="cost" step="0.01" required>
+    <button type="submit" class="add-Inventory">Add to Inventory</button>
+</form>
+
+<script>
+    $(document).ready(function () {
+        $("#add-inventory-form").submit(function (event) {
+            event.preventDefault();
+
+            $.ajax({
+                type: "POST",
+                url: "{% url 'add_inventory' %}",
+                data: $(this).serialize(),
+                success: function (response) {
+                    const newRow = '<tr>' +
+                        '<td>' + response.inventory_id + '</td>' +
+                        '<td>' + response.name + '</td>' +
+                        '<td>' + response.quantity + '</td>' +
+                        '<td>' + response.cost + '</td>' +
+                        '<td>' + response.subtotal + '</td>' +
+                        '<td>' + response.entry_date + '</td>' +
+                        '<td>' +
+                        '<form method="post" class="delete-form" data-id="' + response.inventory_id + '">' +
+                        '{% csrf_token %}' +
+                        '<button class="delete-button" type="button">Delete</button>' +
+                        '</form>' +
+                        '</td>' +
+                        '</tr>';
+                    const newRowElement = $(newRow);
+                    $("table tbody").append(newRowElement);
+
+                    alert('Inventory added successfully.');
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        $("table").on("click", ".delete-button", function () {
+            const form = $(this).closest("form");
+            const inventoryId = form.data("id");
+
+            if (inventoryId !== undefined) {
+                $.ajax({
+                    type: "POST",
+                    url: "/delete_inventory/" + inventoryId + "/",
+                    data: form.serialize(),
+                    success: function (response) {
+                        form.closest("tr").remove();
+                        alert('Inventory deleted successfully.');
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    }
+                });
+            } else {
+                alert('Error: Unable to determine Inventory ID.');
+            }
+        });
+           $("#search-button").on("click", function () {
+               const searchName = $("#search-name").val();
+
+        $.ajax({
+            type: "GET",
+            url: "{% url 'search_inventory' %}?name=" + encodeURIComponent(searchName),
+            success: function (response) {
+                $("table tbody").empty();
+                for (let i = 0; i < response.length; i++) {
+                    const inventory = response[i];
+                    const newRow = '<tr>' +
+                        '<td>' + inventory.inventory_id + '</td>' +
+                        '<td>' + inventory.name + '</td>' +
+                        '<td>' + inventory.quantity + '</td>' +
+                        '<td>' + inventory.cost + '</td>' +
+                        '<td>' + inventory.subtotal + '</td>' +
+                        '<td>' + inventory.entry_date + '</td>' +
+                        '<td>' +
+                        '<form method="post" class="delete-form" data-id="' + inventory.inventory_id + '">' +
+                        '{% csrf_token %}' +
+                        '<button class="delete-button" type="button">Delete</button>' +
+                        '</form>' +
+                        '</td>' +
+                        '</tr>';
+                    const newRowElement = $(newRow);
+                    $("table tbody").append(newRowElement);
+                }
+            },
+            error: function (error) {
+                console.log(error);
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>
