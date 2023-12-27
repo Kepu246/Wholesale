@@ -3,10 +3,13 @@
 
 
 Start the Django web server using the following command:
+
 python manage.py runserver
 
 In the event of loss of the Database to use:
+
 python manage.py makemigrations
+
 python manage.py migrate
 
 
