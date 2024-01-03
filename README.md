@@ -26,3 +26,6 @@ Based on the graphical structure of the database, create SQL for creating tables
 The web solution can be built on the framework that is most convenient for you to perform this task. But it is mandatory that the framework is open source.
 The completed work must be demonstrated in the form of a web page accessible via an internet URL.
 When performing the task, use an object-oriented approach.
+
+
+Demo: https://my-django-app1-ab9fbc4613c3.herokuapp.com/
